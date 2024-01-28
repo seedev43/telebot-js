@@ -17,6 +17,7 @@ async function serializeMsg(bot, m) {
     m.msg.from.first_name +
     (m.msg.from.last_name !== undefined ? " " + m.msg.from.last_name : "");
   m.text = m.msg.text;
+  m.type = m.msg.chat.type;
   m.chatid = m.msg.chat.id;
   m.fromid = m.msg.from.id;
   m.isBot = m.msg.from.is_bot;
@@ -34,17 +35,20 @@ async function serializeMsg(bot, m) {
     return m.msg.chat.type === "private";
   })();
 
-  m.isAdmin = await (async () => {
-    admins = await bot.api.getChatAdministrators(m.chatid);
-    let check = admins.some((admin) => admin.user.id === m.fromid);
-    return check;
-  })();
+  if (m.isGroup) {
+    m.isAdmin = await (async () => {
+      admins = await bot.api.getChatAdministrators(m.chatid);
+      let check = admins.some((admin) => admin.user.id === m.fromid);
+      return check;
+    })();
 
-  m.isBotAdmin = await (async () => {
-    admins = await bot.api.getChatAdministrators(m.chatid);
-    let check = admins.some((admin) => admin.user.id === m.idBot);
-    return check;
-  })();
+    m.isBotAdmin = await (async () => {
+      admins = await bot.api.getChatAdministrators(m.chatid);
+      let check = admins.some((admin) => admin.user.id === m.idBot);
+      return check;
+    })();
+  }
+
   const regexPrefix = new RegExp("^[" + prefixList + "]", "i");
   const matchPrefix = regexPrefix.test(m.text)
     ? m.text.match(regexPrefix)[0]
